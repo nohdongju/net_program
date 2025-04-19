@@ -1,18 +1,19 @@
-from socket import *
+import socket
 
-port = 3333
-BUFFSIZE = 1024
-sock = socket(AF_INET, SOCK_DGRAM)
+SERVER_PORT = 9999
+BUFFER = 1024
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 while True:
-    msg = input('Enter the message ("send mboxId message" or "receive mboxId "): ')
+    msg = input('Enter the message("send mboxID message" or "receive mboxID"):')
 
-    sock.sendto(msg.encode(), ('localhost', port))
+    s.sendto(msg.encode(), ('localhost', SERVER_PORT))
 
     if msg == 'quit':
         break
 
-    data, addr = sock.recvfrom(BUFFSIZE)
+    data, _ = s.recvfrom(BUFFER)
     print(data.decode())
 
-sock.close()
+s.close()

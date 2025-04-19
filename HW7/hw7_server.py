@@ -1,49 +1,42 @@
-from socket import *
+import socket
 
-port = 3333
-BUFFSIZE = 1024
+PORT = 9999
+BUFFER = 1024
 
-sock = socket(AF_INET, SOCK_DGRAM)
-sock.bind(('', port))
-print("Server running...")
+# 메시지 저장소 (mboxID: queue of messages)
+mailbox = {}
 
-mboxes = {}
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.bind(('', PORT))
+
+print("Listening...")
 
 while True:
-    data, addr = sock.recvfrom(BUFFSIZE)
-    message = data.decode()
-    tokens = message.split(maxsplit=2)
+    data, addr = s.recvfrom(BUFFER)
+    msg = data.decode()
 
-    if tokens[0] == "quit":
-        print("Server shutting down.")
+    if msg == 'quit':
+        print("종료")
         break
 
-    elif tokens[0] == "send" and len(tokens) >= 3:
-        mboxId = tokens[1]
-        msg_content = tokens[2]
+    elif msg.startswith("send "):
+        parts = msg.split(' ', 2)
+        mbox_id, message = parts[1], parts[2]
+        if mbox_id not in mailbox:
+            mailbox[mbox_id] = []
+        mailbox[mbox_id].append(message)
+        s.sendto(b'OK', addr)
 
-        # 메시지를 저장
-        if mboxId not in mboxes:
-            mboxes[mboxId] = []
-        mboxes[mboxId].append(msg_content)
-
-        sock.sendto("OK".encode(), addr)
-        print(f"[send] Stored '{msg_content}' to mailbox '{mboxId}'")
-
-    elif tokens[0] == "receive" and len(tokens) >= 2:
-        mboxId = tokens[1]
-
-        # 메시지 존재 여부 확인 및 전송
-        if mboxId in mboxes and mboxes[mboxId]:
-            reply = mboxes[mboxId].pop(0)
-            sock.sendto(reply.encode(), addr)
-            print(f"[receive] Sent '{reply}' from mailbox '{mboxId}'")
+    elif msg.startswith("receive "):
+        parts = msg.split(' ', 1)
+        mbox_id = parts[1]
+        if mbox_id in mailbox and mailbox[mbox_id]:
+            response = mailbox[mbox_id].pop(0)
+            s.sendto(response.encode(), addr)
         else:
-            sock.sendto("No messages".encode(), addr)
-            print(f"[receive] No messages in mailbox '{mboxId}'")
+            s.sendto(b'No messages', addr)
 
     else:
-        sock.sendto("Invalid command".encode(), addr)
-        print(f"[error] Invalid command received: {message}")
+        s.sendto(b'Invalid command', addr)
 
-sock.close()
+s.close()
