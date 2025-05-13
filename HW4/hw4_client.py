@@ -1,9 +1,8 @@
 from socket import *
 s = socket(AF_INET, SOCK_STREAM)
 s.connect(('localhost', 3333))
-
 while True:
-    msg = input('Calculator(end : q) : ').replace(" ", "")
+    msg = input()
     if msg == 'q':
         break
     s.send(msg.encode())

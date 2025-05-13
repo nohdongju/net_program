@@ -10,7 +10,8 @@ class Udphdr:
         self.checksum = checksum
 
     def pack_Udphdr(self):
-        return struct.pack('!HHHH', self.src_port, self.dst_port, self.length, self.checksum)
+        #4개의 필드를 네트워크 바이트 순서(빅엔디안)로 2바이트씩 패킹
+        return struct.pack('!HHHH', self.src_port, self.dst_port, self.length, self.checksum) 
 
 def unpack_Udphdr(buffer):
     return struct.unpack('!HHHH', buffer[:8])
